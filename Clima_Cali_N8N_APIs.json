@@ -1,0 +1,164 @@
+{
+  "name": "Lluvia Cali Gratis",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 22,
+              "triggerAtMinute": 30
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "7d2bc118-f94a-4ecb-bded-160e1b83fe08",
+      "name": "Schedule Trigger",
+      "alwaysOutputData": true,
+      "notesInFlow": true,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "url": "https://api.open-meteo.com/v1/forecast?latitude=3.4516&longitude=-76.5320&hourly=precipitation,rain,showers&current=rain&timezone=auto",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "d194bb09-ca86-4c42-b90f-8c0b1a98657d",
+      "name": "HTTP Request",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f309a877-07f6-4c80-b73e-5853cc82d8c4",
+              "leftValue": "={{ $json.current.rain }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        416,
+        0
+      ],
+      "id": "61ed0670-9c27-48e9-bccd-789298551b96",
+      "name": "If",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "40fd8e51-a7a4-4007-9082-e90120521cee",
+              "name": "html",
+              "value": "=<div style=\"background:#001f4d;color:white;padding:25px;border-radius:15px;font-family:Arial\"> <h1>⚠️ LLUVIA DETECTADA EN CALI</h1>  <p><b>Latitud:</b> 3.4516</p>  <p><b>Longitud:</b> -76.5320</p>  <p><b>Lluvia actual:</b> {{$json.current.rain}} mm</p>  <p><b>Estado:</b> Está lloviendo ahora mismo.</p> </div>",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        624,
+        -96
+      ],
+      "id": "d345bb49-b3c2-4ce2-9e0a-da4e08a5ac51",
+      "name": "Edit Fields",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "path": "27fe1f2e-889d-4699-801c-789db3093fb0",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        832,
+        -96
+      ],
+      "id": "ebae0ada-f18d-4942-9ddd-bbd5847c8f9a",
+      "name": "Webhook",
+      "webhookId": "27fe1f2e-889d-4699-801c-789db3093fb0",
+      "disabled": true
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "9b76ae21-f098-4693-a965-140195afb081",
+  "meta": {
+    "instanceId": "9603252f693eabc7b830fd04829371717ce4dff7b1c6bb447041edeedababef9"
+  },
+  "id": "szvFrGMUQQJSo7N3",
+  "tags": []
+}
