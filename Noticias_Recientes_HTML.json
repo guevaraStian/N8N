@@ -1,0 +1,157 @@
+{
+  "name": "Noticias_PDF",
+  "nodes": [
+    {
+      "parameters": {
+        "url": "https://news.google.com/rss?hl=es-419&gl=CO&ceid=CO:es-419",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "ec61709a-365b-4b84-8bb6-bb1a38dc04b0",
+      "name": "RSS Read"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        16,
+        0
+      ],
+      "id": "2549d205-96f6-4211-96f2-9b48186aeb09",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "maxItems": 10
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        384,
+        0
+      ],
+      "id": "8e5de2d2-6a01-4f65-9c65-4cae40d88f68",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Obtener items RSS\nconst items = $input.all();\n\n// Ordenar por fecha\nitems.sort((a, b) => {\n  return new Date(b.json.pubDate) - new Date(a.json.pubDate);\n});\n\n// Tomar solo 10\nconst top10 = items.slice(0, 10);\n\n// Función resumen simple\nfunction resumir(texto) {\n\n  if (!texto) return \"Sin resumen.\";\n\n  // limpiar HTML\n  texto = texto.replace(/<[^>]*>/g, '');\n\n  // cortar frases\n  const frases = texto.split('.');\n\n  // primeras 2 frases\n  return frases.slice(0, 2).join('.') + '.';\n}\n\n\nconst ahora = new Date();\n\n// Función para agregar ceros\nfunction pad(n) {\n  return n.toString().padStart(2, '0');\n}\n\n// Fecha y hora\nconst año = ahora.getFullYear();\nconst mes = pad(ahora.getMonth() + 1);\nconst dia = pad(ahora.getDate());\n\nconst hora = pad(ahora.getHours());\nconst minutos = pad(ahora.getMinutes());\nconst segundos = pad(ahora.getSeconds());\n\n// Timestamp final\nconst timestamp = `${año}${mes}${dia}_${hora}${minutos}${segundos}`;\n\n// Nombres de archivo\n//const nombreHTML = `Noticias_${timestamp}.html`;\nconst nombreHTML = 'Notiias.html'\nconst nombrePDF = `Noticias_${timestamp}.pdf`;\n\n// Obtener HTML generado\nconst html = $input.first().json.html;\n\n\n\n// Crear nuevo array\nconst noticias = top10.map((item, index) => {\n\n  return {\n    json: {\n      numero: index + 1,\n      titulo: item.json.title,\n      link: item.json.link,\n      fecha: item.json.pubDate,\n      resumen: resumir(\n        item.json.contentSnippet ||\n        item.json.content ||\n        item.json.title\n      ),\n      html,\n      nombreHTML,\n      nombrePDF,\n      timestamp\n    }\n  };\n});\n\nreturn noticias;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        0
+      ],
+      "id": "67408d2e-f376-409f-9612-968663dc4655",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "html": "<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n<meta charset=\"UTF-8\">\n\n<style>\n\nbody{\n    font-family: Arial;\n    padding:40px;\n    color:#222;\n}\n\nh1{\n    text-align:center;\n    color:#111;\n}\n\n.noticia{\n    margin-bottom:30px;\n    padding:20px;\n    border:1px solid #ccc;\n    border-radius:10px;\n}\n\n.titulo{\n    font-size:22px;\n    font-weight:bold;\n    margin-bottom:10px;\n}\n\n.fecha{\n    color:gray;\n    margin-bottom:10px;\n}\n\n.resumen{\n    line-height:1.6;\n}\n\n.link{\n    margin-top:10px;\n}\n\n</style>\n</head>\n\n<body>\n\n<h1>Top 10 Noticias del Momento</h1>\n\n{{ $input.all().map(n => `\n\n<div class=\"noticia\">\n\n<div class=\"titulo\">\n${n.json.numero}. ${n.json.titulo}\n</div>\n\n<div class=\"fecha\">\n${n.json.fecha}\n</div>\n\n<div class=\"resumen\">\n${n.json.resumen}\n</div>\n\n<div class=\"link\">\n<a href=\"${n.json.link}\">\nLeer noticia completa\n</a>\n</div>\n\n</div>\n\n`).join('') }}\n\n</body>\n</html>"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        768,
+        0
+      ],
+      "id": "82ce5d6d-56af-4967-bb9e-61e2fe90bf3e",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "operation": "html",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        928,
+        0
+      ],
+      "id": "fffdc5ba-7e1f-4270-83de-58ab5a2c8185",
+      "name": "Convert to File"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "RSS Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Read": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "0e4f8c44-fe36-4744-b84f-1295304aa5f7",
+  "meta": {
+    "instanceId": "9603252f693eabc7b830fd04829371717ce4dff7b1c6bb447041edeedababef9"
+  },
+  "id": "0LHE3JKUqnElVAVq",
+  "tags": []
+}
