@@ -11,3 +11,5 @@ git clone https://github.com/guevaraStian/N8N.git
 cd N8N
 git push origin master
 ```
+
+Luego de tener descargado el codigo de programacion dentro de cada json, se procede a abrir n8n y ejecutar el codigo.
